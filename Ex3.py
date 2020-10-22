@@ -99,9 +99,9 @@ class RNN(nn.Module):
 
     def forward(self, input, hidden):
 
-        input = torch.unsqueeze(input,0)
+        # input = torch.unsqueeze(input,0)
         # input = input.transpose(1,0)
-        print(len(input))
+        # print(len(input))
         # hidden = torch.unsqueeze(hidden,0)
         lstm_out, hidden = self.gru(input,hidden)
         # output, hidden = self.gru(input)  # Hier moet ik input (Tensor) , tuple (Tensor, Tensor)
@@ -144,7 +144,11 @@ def train(category_tensor, line_tensor):
     # for i in range(line_tensor.size()[0]):
     #     output,hidden = rnn(line_tensor[i], hidden)
     output, hidden = rnn(line_tensor, hidden)
-    loss = criterion(output, category_tensor)
+    # output=output.squeeze()
+    # category_tensor=category_tensor.expand(output.size()[0])
+    for i in range(output.size()[0]):
+        loss = criterion(output[i], category_tensor)
+    # loss = criterion(output, category_tensor)
     loss.backward()
 
     # Add parameters' gradients to their values, multiplied by learning rate
