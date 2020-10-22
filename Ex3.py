@@ -94,7 +94,7 @@ class RNN(nn.Module):
         self.hidden_size = hidden_size
         self.gru = nn.LSTM(input_size, hidden_size, 1)
         # self.i2h = nn.Linear((hidden_size,hidden_size), hidden_size)
-        self.i2o = nn.Linear(hidden_size, output_size)
+        self.h2o = nn.Linear(hidden_size, output_size)
         self.softmax = nn.LogSoftmax(dim=1)
 
     def forward(self, input, hidden):
@@ -107,7 +107,7 @@ class RNN(nn.Module):
         # output, hidden = self.gru(input)  # Hier moet ik input (Tensor) , tuple (Tensor, Tensor)
         # combined = torch.cat((lstm_out, hidden), 1)
         # hidden = self.i2h(hidden)
-        output = self.i2o(lstm_out)
+        output = self.h2o(hidden[0].view(1, self.hidden_size))
         output = self.softmax(output)
         return output, hidden
 
@@ -146,9 +146,9 @@ def train(category_tensor, line_tensor):
     output, hidden = rnn(line_tensor, hidden)
     # output=output.squeeze()
     # category_tensor=category_tensor.expand(output.size()[0])
-    for i in range(output.size()[0]):
-        loss = criterion(output[i], category_tensor)
-    # loss = criterion(output, category_tensor)
+    # for i in range(output.size()[0]):
+    #     loss = criterion(output[i], category_tensor)
+    loss = criterion(output, category_tensor)
     loss.backward()
 
     # Add parameters' gradients to their values, multiplied by learning rate
@@ -167,10 +167,10 @@ def timeSince(since):
 
 # Just return an output given a line
 def evaluate(line_tensor):
-    hidden = rnn.initHidden()
+    hidden = rnn.init_hidden(line_tensor)
 
-    for i in range(line_tensor.size()[0]):
-        output, hidden = rnn(line_tensor[i], hidden)
+    # for i in range(line_tensor.size()[0]):
+    output, hidden = rnn(line_tensor, hidden)
 
     return output
 
@@ -196,7 +196,7 @@ if __name__ == "__main__":
     print(letterToTensor('J'))
 
     print(lineToTensor('Jones').size())
-    n_hidden = 128
+    n_hidden = 256
     rnn = RNN(n_letters, n_hidden,n_categories)
     # 57 letters = input size, 128 = hidden size, 18 categories= output size
     # input = letterToTensor('A')
